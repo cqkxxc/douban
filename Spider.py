@@ -13,21 +13,26 @@ import sqlite3  # sqlite数据库操作
 def main():
     baseurl = "https://movie.douban.com/top250?start="
     # 1.爬取网页
-    # datalist = getData(baseurl)
+    datalist = getData(baseurl)
     savepath = ".\\豆瓣电影TOP250.xls"
     # 3.保存数据
     # saveData(savepath)
-    askURL(baseurl)
+    # askURL(baseurl)
 
 
 # 爬取网页
 def getData(baseurl):
     datalist = []
-    for i in range(0, 10):  # 调用获取页面信息的函数 10 次
-        url = baseeurl + str(i * 25)
-        html = askURL(url)  #保存获取到的网页源码
+    for i in range(0, 1):  # 调用获取页面信息的函数 10 次
+        url = baseurl + str(i * 25)
+        html = askURL(url)  # 保存获取到的网页源码
         # 2.获取一次就解析一次数据
-
+        soup = BeautifulSoup(html,"html.parser")
+        itemlist=soup.find_all('div',class_="item")
+        for item in itemlist:
+            item=str(item)
+            link = re.findall('<a href="(.*?)">',item)[0]
+            print(link)
     return datalist
 
 
@@ -42,12 +47,12 @@ def askURL(url):
     try:
         response = urllib.request.urlopen(request)
         html = response.read().decode("utf-8")
-        print(html)
+        # print(html)
     except urllib.error.URLError as e:
         if hasattr(e, "code"):
             print(e.code)
         if hasattr(e, "reason"):
-            print(e, reason)
+            print(e.reason)
     return html
 
 
