@@ -9,6 +9,21 @@ import urllib.request, urllib.error  # 制定URL，获取网页数据
 import xlwt  # 进行EXCEL操作
 import sqlite3  # sqlite数据库操作
 
+# 影片数据抓取规则
+finaLink = re.compile('<a href="(.*?)">')  # 每个列表里的A标签链接
+# 影片图片
+findImgSrc = re.compile('<img.*src="(.*?)"', re.S)  # re.S让换行符包含在字符中
+# 影片片名
+fingTitle = re.compile('<span class="title">(.*)</span>')
+# 评分
+findScore = re.compile('<span class="rating_num" property="v:average">(.*)</span>')
+# 评价人数
+findJudge = re.compile('<span>(\d*)人评价</span>')
+# 概况
+findInq = re.compile('<span class="inq">(.*)</span>')
+# 影片相关内容
+findBd = re.compile('<p class="">(.*?)</p>', re.S)
+
 
 def main():
     baseurl = "https://movie.douban.com/top250?start="
@@ -23,17 +38,53 @@ def main():
 # 爬取网页
 def getData(baseurl):
     datalist = []
-    for i in range(0, 1):  # 调用获取页面信息的函数 10 次
+    for i in range(0, 10):  # 调用获取页面信息的函数 10 次
         url = baseurl + str(i * 25)
         html = askURL(url)  # 保存获取到的网页源码
         # 2.获取一次就解析一次数据
-        soup = BeautifulSoup(html,"html.parser")
-        itemlist=soup.find_all('div',class_="item")
-        for item in itemlist:
-            item=str(item)
-            link = re.findall('<a href="(.*?)">',item)[0]
-            print(link)
-    return datalist
+        soup = BeautifulSoup(html, "html.parser")
+        for item in soup.find_all('div', class_='item'):
+            data = []
+            item = str(item)
+
+            Link = re.findall(finaLink, item)[0]
+            data.append(Link)
+
+            ImgSrc = re.findall(findImgSrc, item)[0]
+            data.append(ImgSrc)
+
+            Title = re.findall(fingTitle, item)
+            if (len(Title) == 2):
+                cTitile = Title[0]  # 添加中文名
+                data.append(cTitile)
+                oTitle = Title[1].replace("/", "")  # 去掉/
+                data.append(oTitle)  # 添加外语名
+            else:
+                data.append(Title[0])
+                data.append(' ')  # 外语名留空
+
+            Score = re.findall(findScore, item)[0]
+            data.append(Score)
+
+            Judge = re.findall(findJudge, item)[0]
+            data.append(Judge)
+
+            Inq = re.findall(findInq, item)
+            if len(Inq) != 0:
+                Inq = Inq[0].replace(".", "")  # 去掉句号
+                data.append(Inq)
+            else:
+                data.append(" ")
+
+            Bd = re.findall(findBd, item)[0]
+            Bd = re.sub(r"<br(\s+)?/>(\s+)?", " ", Bd)  # 去掉br
+            Bd = re.sub("/", " ", Bd)  # 替换/
+            data.append(Bd.strip())  # 去掉前后的空格
+
+            datalist.append(data)  #把处理好的一部电影信息放入datalist
+        print(datalist)
+
+        return datalist
 
 
 # 得到指定一个URL的网页内容
