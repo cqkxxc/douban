@@ -29,9 +29,9 @@ def main():
     baseurl = "https://movie.douban.com/top250?start="
     # 1.爬取网页
     datalist = getData(baseurl)
-    savepath = ".\\豆瓣电影TOP250.xls"
+    savepath = "豆瓣电影TOP250.xls"
     # 3.保存数据
-    # saveData(savepath)
+    saveData(datalist, savepath)
     # askURL(baseurl)
 
 
@@ -80,11 +80,9 @@ def getData(baseurl):
             Bd = re.sub(r"<br(\s+)?/>(\s+)?", " ", Bd)  # 去掉br
             Bd = re.sub("/", " ", Bd)  # 替换/
             data.append(Bd.strip())  # 去掉前后的空格
+            datalist.append(data)  # 把处理好的一部电影信息放入datalist
 
-            datalist.append(data)  #把处理好的一部电影信息放入datalist
-        print(datalist)
-
-        return datalist
+    return datalist
 
 
 # 得到指定一个URL的网页内容
@@ -108,10 +106,22 @@ def askURL(url):
 
 
 # 3.保存数据
-def saveData(savepath):
-    pass
+def saveData(datalist, savepath):
+    book = xlwt.Workbook(encoding="utf-8",style_compression=0)  # 创建workbook对象
+    sheet = book.add_sheet("豆瓣电影Top250", cell_overwrite_ok=True)  # 创建工作表
+    col = ('电影详情链接', '图片链接', '影片中文名', '影片外文名', '评分', '评价人数', '电影概况', '相关信息')
+    for i in range(0, 8):
+        sheet.write(0, i, col[i])
+    for i in range(0, 250):
+        print("第%d条" % (i + 1))
+        data = datalist[i]
+        for j in range(0, 8):
+            sheet.write(i + 1, j, data[j])
+
+    book.save(savepath)  # 保存表
 
 
 if __name__ == "__main__":  # 当程序执行时
     # 调用函数
     main()
+    print("爬取完毕!")
